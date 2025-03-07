@@ -1,0 +1,31 @@
+name: x86_64
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      Tempoary_CONFIG:
+        description: '配置文件'
+        default: 'x86_64'
+        type: choice
+        options:
+          - 'x86_64'
+      SSH:
+        description: 'SSH连接Actions'
+        default: 'true'
+        type: boolean
+jobs:
+  Compile:
+    runs-on: ubuntu-22.04
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+
+    steps:
+
+    - name: SSH连接
+      uses: P3TERX/ssh2actions@v1.0.0
+      if: github.event.inputs.SSH == 'true'
+      env:
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}     
