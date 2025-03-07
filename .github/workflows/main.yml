@@ -23,9 +23,26 @@ jobs:
 
     steps:
 
-    - name: SSH连接
-      uses: P3TERX/ssh2actions@v1.0.0
-      if: github.event.inputs.SSH == 'true'
-      env:
-        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}     
+      - name: Set up environment
+        run: |
+          # 下载并安装 aliyunpan 工具
+          sudo wget -q ${{ secrets.ALIYUNPAN_DOWNLOAD_URL }} -O /bin/aliyunpan
+          sudo chmod 0755 /bin/aliyunpan
+          # 修改 hosts 文件（如果需要）
+          sudo sh -c 'echo "${{ secrets.ALIYUNPAN_US_NODE }} api.alipan.com auth.alipan.com www.alipan.com" >> /etc/hosts'
+          # 设置阿里云盘配置目录
+          export ALIYUNPAN_CONFIG_DIR="$(pwd)/.aliyunpan"
+          # 解密并获取阿里云盘令牌
+          aliyun_token=$(curl -s ${{ secrets.ALIYUNPAN_TOKEN }} | openssl enc -aes-256-cfb -pbkdf2 -a -d -k ${{ secrets.TOKEN_DECRYPT_KEY }})
+          # 登录阿里云盘
+          echo $aliyun_token | aliyunpan login
+
+      - name: Compile code
+        run: |
+          # 这里添加你的编译命令，例如：
+          make  # 如果使用 Makefile 进行编译
+
+      - name: Upload to Aliyunpan
+        run: |
+          # 上传编译后的文件到阿里云盘
+          aliyunpan upload /path/to/your/compiled/file /destination/path/in/aliyunpan
